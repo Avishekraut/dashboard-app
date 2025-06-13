@@ -7,7 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Gauge,
-  Users,
+  Package,
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -22,10 +22,10 @@ const Sidebar = () => {
       path: "/",
     },
     {
-      id: "users",
-      label: "Users",
-      icon: Users,
-      path: "/users",
+      id: "products",
+      label: "Products",
+      icon: Package,
+      path: "/products",
     },
   ];
 
