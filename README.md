@@ -122,8 +122,7 @@ yarn preview
 If you have any questions or need clarification, feel free to reach out.
 
 **Submitted by:** Avishek Raut  
-**GitHub:** [https://github.com/your-username](https://github.com/your-username)  
-**Email:** [your-email@example.com]
+**Email:** avishekraut123@gmail.com
 
 ---
 
