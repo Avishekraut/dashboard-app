@@ -1,8 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useApi } from "../hooks/useApi";
 import type { Column } from "../components/table/Table";
-import Filters from "../components/table/Filters";
+import Filters, { type Category } from "../components/table/Filters";
 import Table from "../components/table/Table";
 import Pagination from "../components/table/Pagination";
 
@@ -27,15 +27,46 @@ const Products = () => {
   const [skip, setSkip] = useState(0);
   const limit = 8;
 
-  const {
-    data: apiResponse,
-    loading,
-    error,
-  } = useApi<ApiResponse>(
-    `${import.meta.env.VITE_BASE_URL}/products?skip=${skip}&limit=${limit}`
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [category, setCategory] = useState("");
+
+  const baseUrl = import.meta.env.VITE_BASE_URL;
+
+  // debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setSkip(0);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // fetch categories
+  const { data: categories } = useApi<Category[]>(
+    `${baseUrl}/products/categories`
   );
 
+  // build URL for filtered data
+  const apiUrl = useMemo(() => {
+    if (debouncedSearch) {
+      return `${baseUrl}/products/search?q=${debouncedSearch}&limit=${limit}&skip=${skip}`;
+    }
+    if (category) {
+      return `${baseUrl}/products/category/${category}?limit=${limit}&skip=${skip}`;
+    }
+    return `${baseUrl}/products?limit=${limit}&skip=${skip}`;
+  }, [baseUrl, debouncedSearch, category, limit, skip]);
+
+  const { data: apiResponse, loading, error } = useApi<ApiResponse>(apiUrl);
+
   const products = apiResponse?.products || [];
+
+  const clearFilters = () => {
+    setSearch("");
+    setCategory("");
+    setSkip(0);
+  };
 
   // pagination info
   const paginationInfo = apiResponse
@@ -111,9 +142,20 @@ const Products = () => {
   return (
     <section className="container px-4 mx-auto h-full">
       <div className="pt-6">
-        <h1 className="text-xl font-semibold">Products</h1>
+        <h1 className="text-xl font-semibold">Product List</h1>
       </div>
-      <Filters />
+      <Filters
+        search={search}
+        onSearchChange={setSearch}
+        category={category}
+        categories={categories || []}
+        onCategoryChange={(val) => {
+          setCategory(val);
+          setSkip(0);
+        }}
+        onClear={clearFilters}
+        isFilterApplied={search.trim() !== "" || category !== ""}
+      />
       {loading ? (
         <p className="text-center">Loading...</p>
       ) : error ? (
