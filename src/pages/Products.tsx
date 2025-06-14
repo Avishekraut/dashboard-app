@@ -5,6 +5,9 @@ import type { Column } from "../components/table/Table";
 import Filters, { type Category } from "../components/table/Filters";
 import Table from "../components/table/Table";
 import Pagination from "../components/table/Pagination";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store";
+import Loading from "../components/Loading";
 
 interface Product {
   id: number;
@@ -30,6 +33,7 @@ const Products = () => {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [category, setCategory] = useState("");
+  const loading = useSelector((state: RootState) => state.loading.isLoading);
 
   const baseUrl = import.meta.env.VITE_BASE_URL;
 
@@ -58,7 +62,7 @@ const Products = () => {
     return `${baseUrl}/products?limit=${limit}&skip=${skip}`;
   }, [baseUrl, debouncedSearch, category, limit, skip]);
 
-  const { data: apiResponse, loading, error } = useApi<ApiResponse>(apiUrl);
+  const { data: apiResponse, error } = useApi<ApiResponse>(apiUrl);
 
   const products = apiResponse?.products || [];
 
@@ -139,6 +143,8 @@ const Products = () => {
     },
   ];
 
+  if (loading) return <Loading />;
+
   return (
     <section className="container px-4 mx-auto h-full">
       <div className="pt-6">
@@ -156,9 +162,7 @@ const Products = () => {
         onClear={clearFilters}
         isFilterApplied={search.trim() !== "" || category !== ""}
       />
-      {loading ? (
-        <p className="text-center">Loading...</p>
-      ) : error ? (
+      {error ? (
         <p className="text-center text-red-500">Failed to load products.</p>
       ) : (
         <>

@@ -1,27 +1,29 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { useDispatch } from "react-redux";
+import { setLoading } from "../store/loadingSlice";
 
-export const useApi = <T = unknown>(url: string) => {
+export function useApi<T>(url: string) {
   const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<any>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
-      setError(null);
+      dispatch(setLoading(true));
       try {
-        const res = await axios.get<T>(url);
-        setData(res.data);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Failed to fetch");
+        const json = await res.json();
+        setData(json);
       } catch (err) {
-        setError(err);
-        setData(null);
+        setError(err as Error);
       } finally {
-        setLoading(false);
+        dispatch(setLoading(false));
       }
     };
-    fetchData();
-  }, [url]);
 
-  return { data, loading, error };
-};
+    fetchData();
+  }, [url, dispatch]);
+
+  return { data, error };
+}
